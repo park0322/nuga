@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>학생 행동 누가기록</title>
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg-color: #f3f4f6;
+      --card-bg: #ffffff;
+      --text-main: #1f2937;
+      --text-sub: #4b5563;
+      --border-color: #d1d5db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+      width: 100%;
+      max-width: 480px;
+      padding: 28px 24px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-main);
+    }
+
+    select, textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, textarea:focus {
+      border-color: var(--primary-color);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+      line-height: 1.5;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--primary-color);
+      color: #ffffff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-submit:disabled {
+      background-color: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .message {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      text-align: center;
+      display: none;
+    }
+
+    .message.success {
+      background-color: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      display: block;
+    }
+
+    .message.error {
+      background-color: #fef2f2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>🌱 학생 행동 누가기록</h1>
+      <p>관찰한 학생의 행동을 기록해 주세요.</p>
+    </div>
+
+    <form id="recordForm">
+      <!-- 학생 선택 -->
+      <div class="form-group">
+        <label for="studentSelect">학생 선택</label>
+        <select id="studentSelect" required>
+          <option value="">학생 목록을 불러오는 중입니다...</option>
+        </select>
+      </div>
+
+      <!-- 기록 입력 -->
+      <div class="form-group">
+        <label for="recordContent">행동 관찰 기록</label>
+        <textarea id="recordContent" placeholder="학생의 긍정적인 변화나 관찰한 행동을 구체적으로 기록해 주세요." required></textarea>
+      </div>
+
+      <!-- 저장 버튼 -->
+      <button type="submit" id="submitBtn" class="btn-submit">기록 저장하기</button>
+    </form>
+
+    <!-- 결과 알림 메시지 -->
+    <div id="statusMessage" class="message"></div>
+  </div>
+
+  <script>
+    // ⭐ 배포한 웹 앱 URL을 여기에 붙여넣어 주세요!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqE4PZWNmmTgJQjK6dMpzgLk3c4nxoOE1PR4FwmRMdwQ9Cr8F441O7mOzQnKMPS9fYnQ/exec";
+
+    const studentSelect = document.getElementById('studentSelect');
+    const recordForm = document.getElementById('recordForm');
+    const recordContent = document.getElementById('recordContent');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusMessage = document.getElementById('statusMessage');
+
+    // 1. 학생 목록 불러오기 (GET)
+    async function loadStudents() {
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          studentSelect.innerHTML = '<option value="">선택하세요</option>';
+          result.data.forEach(student => {
+            const option = document.createElement('option');
+            option.value = JSON.stringify({ number: student.number, name: student.name });
+            option.textContent = `${student.number}번 ${student.name}`;
+            studentSelect.appendChild(option);
+          });
+        } else {
+          showMessage('명렬을 불러오지 못했습니다: ' + result.message, 'error');
+        }
+      } catch (err) {
+        showMessage('연결 오류: URL을 확인해 주세요.', 'error');
+      }
+    }
+
+    // 2. 누가기록 저장하기 (POST)
+    recordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      if (!studentSelect.value) {
+        alert('학생을 선택해 주세요.');
+        return;
+      }
+
+      const selectedStudent = JSON.parse(studentSelect.value);
+      const record = recordContent.value.trim();
+
+      // UI 로딩 상태 변경
+      submitBtn.disabled = true;
+      submitBtn.textContent = '저장하는 중...';
+      statusMessage.style.display = 'none';
+
+      try {
+        // GAS 리다이렉트 대응을 위한 fetch
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors', // Apps Script CORS 우회 방식
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            number: selectedStudent.number,
+            name: selectedStudent.name,
+            record: record
+          })
+        });
+
+        // 성공 안내 및 폼 초기화
+        showMessage('기록이 안전하게 저장되었습니다! ✨', 'success');
+        recordContent.value = '';
+        studentSelect.selectedIndex = 0;
+      } catch (err) {
+        showMessage('저장 중 오류가 발생했습니다: ' + err.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '기록 저장하기';
+      }
+    });
+
+    // 알림 메시지 표시 도우미 함수
+    function showMessage(text, type) {
+      statusMessage.textContent = text;
+      statusMessage.className = `message ${type}`;
+    }
+
+    // 초기 실행
+    window.addEventListener('DOMContentLoaded', loadStudents);
+  </script>
+</body>
+</html>
