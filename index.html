@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>학생 행동 누가기록</title>
+  
+  <!-- 파비콘 설정 -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
   <style>
     :root {
       --primary-color: #4f46e5;
@@ -170,7 +174,7 @@
 
   <script>
     // ⭐ 배포한 웹 앱 URL을 여기에 붙여넣어 주세요!
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxqE4PZWNmmTgJQjK6dMpzgLk3c4nxoOE1PR4FwmRMdwQ9Cr8F441O7mOzQnKMPS9fYnQ/exec";
+    const SCRIPT_URL = "여기에_웹앱_URL을_입력하세요";
 
     const studentSelect = document.getElementById('studentSelect');
     const recordForm = document.getElementById('recordForm');
@@ -190,68 +194,4 @@
             const option = document.createElement('option');
             option.value = JSON.stringify({ number: student.number, name: student.name });
             option.textContent = `${student.number}번 ${student.name}`;
-            studentSelect.appendChild(option);
-          });
-        } else {
-          showMessage('명렬을 불러오지 못했습니다: ' + result.message, 'error');
-        }
-      } catch (err) {
-        showMessage('연결 오류: URL을 확인해 주세요.', 'error');
-      }
-    }
-
-    // 2. 누가기록 저장하기 (POST)
-    recordForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      if (!studentSelect.value) {
-        alert('학생을 선택해 주세요.');
-        return;
-      }
-
-      const selectedStudent = JSON.parse(studentSelect.value);
-      const record = recordContent.value.trim();
-
-      // UI 로딩 상태 변경
-      submitBtn.disabled = true;
-      submitBtn.textContent = '저장하는 중...';
-      statusMessage.style.display = 'none';
-
-      try {
-        // GAS 리다이렉트 대응을 위한 fetch
-        await fetch(SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors', // Apps Script CORS 우회 방식
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            number: selectedStudent.number,
-            name: selectedStudent.name,
-            record: record
-          })
-        });
-
-        // 성공 안내 및 폼 초기화
-        showMessage('기록이 안전하게 저장되었습니다! ✨', 'success');
-        recordContent.value = '';
-        studentSelect.selectedIndex = 0;
-      } catch (err) {
-        showMessage('저장 중 오류가 발생했습니다: ' + err.message, 'error');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '기록 저장하기';
-      }
-    });
-
-    // 알림 메시지 표시 도우미 함수
-    function showMessage(text, type) {
-      statusMessage.textContent = text;
-      statusMessage.className = `message ${type}`;
-    }
-
-    // 초기 실행
-    window.addEventListener('DOMContentLoaded', loadStudents);
-  </script>
-</body>
-</html>
+            studentSelect
